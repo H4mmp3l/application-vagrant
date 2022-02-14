@@ -1,0 +1,77 @@
+##################################################
+### Copy GitLab SSH key
+- name: Copy private GitLab SSH key
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: 0600
+  with_items:
+    - { src: vagrant_rsa, dest: /home/vagrant/.ssh/vagrant_rsa, owner: vagrant, group: vagrant, mode: 0600 }
+
+- name: Copy public GitLab SSH key
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: 0644
+  with_items:
+    - { src: vagrant_rsa.pub, dest: /home/vagrant/.ssh/vagrant_rsa.pub, owner: vagrant, group: vagrant }
+
+##################################################
+### Clone application-symfony project
+- name: Clone application-symfony repository
+  git:
+    repo: "{{ app_repo }}"
+    dest: "{{ app_folder }}"
+    clone: yes
+    accept_hostkey: yes
+    key_file: "{{ vagrant_ssh_key }}"
+    ssh_opts: "-o StrictHostKeyChecking=no"
+    update: no
+    version: "develop"
+
+- name: Run composer install
+  composer:
+    command: install
+    no_dev: no
+    working_dir: "{{ app_folder }}"
+
+- name: Run yarn install
+  command: yarn install
+  args:
+    chdir: "{{ app_folder }}"
+
+- name: Create application-symfony Database
+  command: php bin/console doctrine:database:create
+  args:
+    chdir: "{{ app_folder }}"
+
+- name: Load application-symfony Database schema
+  command: php bin/console doctrine:migrations:migrate
+  args:
+    chdir: "{{ app_folder }}"
+
+- name: Load application-symfony Database schema
+  command: php bin/console doctrine:fixtures:load
+  args:
+    chdir: "{{ app_folder }}"
+
+- name: Copy Apache Config
+  become: yes
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0644
+  with_items:
+    - { src: application-symfony.conf, dest: "/etc/apache2/sites-available/application-symfony.conf" }
+
+- name: Enable application-symfony Site in Apache
+  become: yes
+  command: a2ensite {{ item }}
+  notify:
+    - restart apache2
+  with_items:
+    - application-symfony

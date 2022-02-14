@@ -1,0 +1,14 @@
+  - hosts: all
+    roles:
+    - { role: basics }
+    - { role: nodejs }
+    - { role: yarn }
+    - { role: updates }
+    - { role: apache }
+    - { role: mysql }
+    - { role: php }
+    - { role: phpmyadmin }
+    - { role: docker }
+    - { role: tests, when: testing_mode == 1 }
+    vars:
+      external_interface: eth1

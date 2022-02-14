@@ -1,0 +1,26 @@
+#!/bin/bash
+
+CAPTAINHOOKFILE="$(pwd)/captainhook.json"
+HOOKNAME=$1
+
+if [[ ! -f $CAPTAINHOOKFILE ]]; then
+	echo "There is no captainhook.json file in this directory"
+	exit 1
+fi
+
+if ! [ -x "$(command -v jq)" ]; then
+	echo "Error: jq is not installed. Use 'brew install jq'"
+	exit 1
+fi
+
+if [[ -z $HOOKNAME ]]; then
+	HOOKNAME="pre-commit"
+fi
+
+if [[ $HOOKNAME != "pre-commit" ]] && [[ $HOOKNAME != "pre-push" ]]
+then
+	echo "Supported hooks are 'pre-commit' and 'pre-push'"
+	exit 1
+fi
+
+cat $CAPTAINHOOKFILE | jq ".\"$HOOKNAME\".actions[].action" | xargs -n1 bash -c

@@ -1,0 +1,2 @@
+nodejs_version: 16
+nodejs_setup_url: https://deb.nodesource.com/setup_{{ nodejs_version }}.x

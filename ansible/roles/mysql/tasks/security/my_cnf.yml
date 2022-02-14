@@ -1,0 +1,17 @@
+---
+
+- name: ensure .my.cnf file with root password credentials is installed
+  template:
+    src: root/my.cnf.j2
+    dest: /root/.my.cnf
+    owner: root
+    group: root
+    mode: 0600
+
+- name: add .my.cnf file for vagrant user
+  template:
+    src: root/my.cnf.j2
+    dest: /home/vagrant/.my.cnf
+    owner: vagrant
+    group: vagrant
+    mode: 0600

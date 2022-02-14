@@ -1,0 +1,16 @@
+---
+# Setup/install tasks.
+- name: Ensure phpMyAdmin is installed.
+  apt:
+    name: phpmyadmin
+    state: present
+  notify: restart apache2
+
+- name: Ensure phpMyAdmin config file is included in Apache config.
+  lineinfile:
+    dest: /etc/apache2/apache2.conf
+    state: present
+    regexp: "^Include.+phpmyadmin.+$"
+    line: "Include /etc/phpmyadmin/apache.conf"
+    insertafter: "EOF"
+  notify: restart apache2

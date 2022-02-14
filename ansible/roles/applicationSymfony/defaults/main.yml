@@ -1,0 +1,5 @@
+app_repo: git@github.com:H4mmp3l/application-symfony.git
+app_folder: /vagrant/application-symfony
+app_cache_folder: /var/cache/application-symfony
+
+vagrant_ssh_key: /home/vagrant/.ssh/vagrant_rsa

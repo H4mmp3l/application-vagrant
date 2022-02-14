@@ -1,0 +1,10 @@
+php_version: 7.4
+php_ini: /etc/php/{{ php_version }}/apache2/php.ini
+php_mods: /etc/php/{{ php_version }}/mods-available
+
+phpunit_url: https://phar.phpunit.de/phpunit.phar
+phpunit_path: /usr/local/bin/phpunit
+
+composer_url: https://getcomposer.org/installer
+composer_tmp: /tmp/composer_installer
+composer_path: /usr/local/bin/

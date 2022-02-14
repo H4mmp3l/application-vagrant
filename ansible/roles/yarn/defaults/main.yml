@@ -1,0 +1,2 @@
+yarn_repo_key: https://dl.yarnpkg.com/debian/pubkey.gpg
+yarn_repo: http://dl.yarnpkg.com/debian/

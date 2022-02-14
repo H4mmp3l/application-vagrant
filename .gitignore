@@ -1,0 +1,10 @@
+.DS_Store
+playbook.retry
+.vagrant
+.idea
+local.yaml
+vendor
+*.log
+
+#Ignore all project folders
+application-symfony

@@ -1,0 +1,37 @@
+##################################################
+### Install and configure Apache
+- name: Install Apache
+  apt:
+    name: ['apache2']
+    state: latest
+    update_cache: yes
+
+- name: Enable mod_rewrite
+  apache2_module:
+    state: present
+    name: rewrite
+  notify:
+    - restart apache2
+
+- name: Enable proxy_http
+  apache2_module:
+    state: present
+    name: proxy_http
+  notify:
+    - restart apache2
+
+- name: Allow Port 22
+  ufw:
+    rule: allow
+    port: '80'
+
+- name: Allow Port 443
+  ufw:
+    rule: allow
+    port: '443'
+
+- name: Start Apache and enable the service in autostart
+  service:
+    name: apache2
+    state: started
+    enabled: yes

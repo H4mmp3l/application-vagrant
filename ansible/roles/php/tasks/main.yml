@@ -1,0 +1,133 @@
+##################################################
+### Pre-checks
+- name: Check if Apache is installed
+  shell: 'dpkg --list | grep apache | grep "^ii" | wc -l'
+  register: apache_installed
+  
+- name: Check installed PHP version
+  shell: 'dpkg --list | grep php | grep "^ii" | wc -l'
+  register: php_installed
+
+- name: Check if required PHP version is installed
+  shell: 'dpkg --list | grep php{{ php_version }} | grep "^ii" | wc -l'
+  register: php_required_installed
+
+- name: Remove different PHP version if installed
+  apt:
+    name: php*
+    state: absent
+    purge: yes
+    autoremove: yes
+  when: php_installed.stdout != "0" and php_required_installed.stdout == "0"
+
+##################################################
+### Install and configure PHP
+- name: Install PHP Packages
+  apt:
+    name: [
+      'php{{ php_version }}',
+      'php{{ php_version }}-apcu',
+      'php{{ php_version }}-bz2',
+      'php{{ php_version }}-cli',
+      'php{{ php_version }}-common',
+      'php{{ php_version }}-curl',
+      'php{{ php_version }}-dev',
+      'php{{ php_version }}-fpm',
+      'php{{ php_version }}-gd',
+      'php{{ php_version }}-intl',
+      'php{{ php_version }}-json',
+      'php{{ php_version }}-ldap',
+      'php{{ php_version }}-mbstring',
+      'php{{ php_version }}-mysql',
+      'php{{ php_version }}-opcache',
+      'php{{ php_version }}-readline',
+      'php{{ php_version }}-soap',
+      'php{{ php_version }}-xdebug',
+      'php{{ php_version }}-xml',
+      'php{{ php_version }}-zip'
+    ]
+    state: latest
+    update_cache: yes
+
+- name: Setup PHP with apache2
+  apt:
+    name: ['libapache2-mod-php{{ php_version }}']
+    state: latest
+    update_cache: yes
+  notify:
+    - restart apache2
+  when: apache_installed.stdout != "0"
+
+- name: Configure timezone
+  lineinfile:
+    dest: "{{ php_ini }}"
+    regexp: '^;date.timezone'
+    line: 'date.timezone = "Europe/Berlin"'
+    backrefs: yes
+  notify:
+   - restart apache2
+
+- name: Configure php memory limit
+  lineinfile:
+    dest: "{{ php_ini }}"
+    regexp: '^memory_limit = '
+    line: 'memory_limit = 1G'
+    backrefs: yes
+  notify:
+   - restart apache2
+
+- name: Configure php max execution time
+  lineinfile:
+    dest: "{{ php_ini }}"
+    regexp: '^max_execution_time = '
+    line: 'max_execution_time = 60'
+    backrefs: yes
+  notify:
+   - restart apache2
+
+- name: Configure php post max size
+  lineinfile:
+    dest: "{{ php_ini }}"
+    regexp: '^post_max_size = '
+    line: 'post_max_size = 600M'
+    backrefs: yes
+  notify:
+   - restart apache2
+
+- name: Configure php upload max filesize
+  lineinfile:
+    dest: "{{ php_ini }}"
+    regexp: '^upload_max_filesize = '
+    line: 'upload_max_filesize = 600M'
+    backrefs: yes
+  notify:
+   - restart apache2
+
+- name: Configure xDebug
+  template:
+    src: 20-xdebug.ini
+    dest: "{{ php_mods }}/xdebug.ini"
+  notify:
+   - restart apache2
+
+##################################################
+### Install PHPUnit
+- name: Install PHPUnit
+  get_url:
+    url: "{{ phpunit_url }}"
+    dest: "{{ phpunit_path }}"
+    mode: 777
+
+##################################################
+### Install Composer
+- name: Download Composer
+  get_url:
+    url: "{{ composer_url }}"
+    dest: "{{ composer_tmp }}"
+    mode: 777
+
+- name: Install Composer
+  shell: "cat {{ composer_tmp }} | php -- --install-dir={{ composer_path }}"
+
+- name: Rename Composer
+  shell: mv -f {{ composer_path }}/composer.phar {{ composer_path }}/composer

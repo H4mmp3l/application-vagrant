@@ -1,0 +1,45 @@
+##################################################
+### Installation tests
+- name: Check Apache
+  shell: 'apache2 -v'
+  register: test_result
+
+- name: Display result
+  debug: 
+    msg: "{{ test_result.stdout }}"
+
+- name: Check MySQL
+  shell: 'mysql --version'
+  register: test_result
+
+- name: Display result
+  debug: 
+    msg: "{{ test_result.stdout }}"
+
+- name: Check PHP
+  shell: 'php -v | head -1'
+  register: test_result
+
+- name: Display result
+  debug:
+    msg: "{{ test_result.stdout }}"
+
+- name: Check Composer
+  shell: 'composer --version'
+  register: test_result
+
+- name: Display result
+  debug: 
+    msg: "{{ test_result.stdout }}"
+
+##################################################
+### Functionality tests
+- name: Webserver check
+  action: uri url=http://127.0.0.1/ return_content=yes
+  ignore_errors: yes
+  register: webserver
+
+- name: Webserver check result
+  fail:
+    msg: "Webserver isn't working properly"
+  when: "'apache' not in webserver.server"

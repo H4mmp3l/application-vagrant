@@ -1,0 +1,26 @@
+##################################################
+### Pre-checks
+- name: Check if Node.js is installed
+  shell: 'node -v'
+  register: nodejs_installed
+  ignore_errors: true
+
+- name: Remove different Node.js version if installed
+  apt:
+    name: nodejs
+    state: absent
+    purge: yes
+    autoremove: yes
+  when: "(nodejs_installed is failed ) or ('v{{ nodejs_version }}' not in nodejs_installed.stdout)"
+
+
+##################################################
+### Install Node.js
+- name: Install apt source
+  shell: "curl -sL {{ nodejs_setup_url }} | sudo -E bash -"
+
+- name: Install Node.js
+  apt:
+    name: nodejs
+    state: latest
+    update_cache: yes

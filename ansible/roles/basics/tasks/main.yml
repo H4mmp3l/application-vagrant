@@ -1,0 +1,113 @@
+##################################################
+### Install basic system packages
+- name: Install basic packages
+  apt:
+    name: [
+      'apt-transport-https', 
+      'ca-certificates', 
+      'curl',
+      'git',
+      'gnupg2',
+      'htop',
+      'imagemagick',
+      'iotop',
+      'jq',
+      'ldap-utils',
+      'postfix',
+      'software-properties-common',
+      'tmux',
+      'unzip',
+      'vim',
+      'wget',
+      'zip',
+    ]
+    state: present
+
+- name: Set timezone to Europe/Berlin
+  timezone:
+    name: Europe/Berlin
+
+##################################################
+### Convenience
+- name: Configure inputrc and vimrc
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: 0600
+  with_items:
+    - { src: inputrc, dest: /root/.inputrc, owner: root, group: root }
+    - { src: vimrc, dest: /root/.vimrc, owner: root, group: root }
+    - { src: inputrc, dest: /home/vagrant/.inputrc, owner: vagrant, group: vagrant }
+    - { src: vimrc, dest: /home/vagrant/.vimrc, owner: vagrant, group: vagrant }
+
+##################################################
+### Neverland
+- name: Add neverland
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: 0755
+  with_items:
+    - { src: neverland, dest: /usr/local/bin/neverland, owner: root, group: staff }
+
+##################################################
+### Install and configure ufw firewall
+- name: Set up firewall
+  apt:
+    name: ufw
+    state: present
+
+- name: Allow Port 22
+  ufw:
+    rule: allow
+    port: '22'
+
+- name: Start the firewall
+  ufw:
+    state: enabled
+
+- name: disable ldap cert verify
+  lineinfile:
+    dest: /etc/ldap/ldap.conf
+    line: 'TLS_REQCERT never'
+
+##################################################
+### Generate Vagrant SSH key and authorize it for root
+- name: Generate SSH key
+  command: ssh-keygen -t rsa -b 2048 -C "" -N "" -f /home/vagrant/.ssh/id_rsa
+  args:
+    creates: /home/vagrant/.ssh/id_rsa
+  become: yes
+  become_user: vagrant
+
+- name: Enable Vagrant SSH key for root
+  authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file', '/home/vagrant/.ssh/id_rsa.pub') }}"
+
+##################################################
+### Copy GitLab SSH key
+- name: Copy private GitLab SSH key
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: 0600
+  with_items:
+    - { src: vagrant_rsa, dest: /home/vagrant/.ssh/vagrant_rsa, owner: vagrant, group: vagrant, mode: 0600 }
+
+- name: Copy public GitLab SSH key
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: 0644
+  with_items:
+    - { src: vagrant_rsa.pub, dest: /home/vagrant/.ssh/vagrant_rsa.pub, owner: vagrant, group: vagrant }

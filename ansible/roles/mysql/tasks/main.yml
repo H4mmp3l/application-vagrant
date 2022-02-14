@@ -1,0 +1,78 @@
+---
+
+- name: Check if Service exists == False
+  stat: path=/etc/init.d/mysql
+  register: service_status
+
+- name: install python mysql bindings
+  apt: name=python3-mysqldb state=latest
+  become: yes
+  become_method: sudo
+  when: service_status.stat.exists == False
+
+- name: install MySQL
+  apt:
+    name: [
+      'mysql-server',
+      'mysql-client'
+    ]
+    state: latest
+    force_apt_get: yes
+  when: service_status.stat.exists == False
+
+- name: Configure mysql pid-file
+  lineinfile:
+    dest: "{{ mysqld_conf }}"
+    regexp: '^pid-file'
+    line: 'pid-file = /var/run/mysqld/mysqld.pid'
+    backrefs: yes
+  notify:
+    - restart mysqld
+
+- name: Configure mysql socket
+  lineinfile:
+    dest: "{{ mysqld_conf }}"
+    regexp: '^socket'
+    line: 'socket = /var/run/mysqld/mysqld.sock'
+    backrefs: yes
+  notify:
+    - restart mysqld
+
+- name: Configure mysql port
+  lineinfile:
+    dest: "{{ mysqld_conf }}"
+    regexp: '^port'
+    line: 'port = 3306'
+    backrefs: yes
+  notify:
+    - restart mysqld
+
+- name: Configure mysql datadir
+  lineinfile:
+    dest: "{{ mysqld_conf }}"
+    regexp: '^datadir'
+    line: 'datadir = /var/lib/mysql'
+    backrefs: yes
+  notify:
+    - restart mysqld
+
+- name: copy my.cnf
+  template: src=etc/my.cnf.j2 dest=/etc/mysql/conf.d/my.cnf backup=yes
+  notify:
+    - restart mysqld
+
+- name: Include secure installation
+  include: secure-installation.yml
+  when: service_status.stat.exists == False
+
+- name: Include user installation
+  include: users.yml
+  when: service_status.stat.exists == False
+
+- name: Include sql mode fixes
+  include: sql-mode.yml
+
+- name: Allow Ports
+  ufw:
+    rule: allow
+    port: '3306'

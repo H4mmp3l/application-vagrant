@@ -1,0 +1,4 @@
+smb:
+    use: false
+    username: "username" #your username without domain
+    password: "password" #your domain password

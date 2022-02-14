@@ -1,0 +1,37 @@
+---
+
+mysql_root_password: 'root'
+
+mysql_import_timezones: true
+mysql_bind_address: 127.0.0.1
+
+mysqld_conf: /etc/mysql/mysql.conf.d/mysqld.cnf
+
+mysql_server_options:
+  ## Memory usage
+  'table_open_cache': '64'
+  'key_buffer_size': '16M'
+  'innodb_buffer_pool_size': '16M'
+  'thread_cache_size': '8'
+  'ft_min_word_len': '3'
+
+  'innodb_log_file_size': '5M'
+  'innodb_log_buffer_size': '8M'
+  'innodb_flush_log_at_trx_commit': '1'
+  'innodb_lock_wait_timeout': '50'
+
+  ## Limitations
+  'max_connections': '100'
+  'max_connect_errors': '100'
+  'long_query_time': '5'
+  'wait_timeout': '100'
+  'interactive_timeout': '900'
+  'connect_timeout': '10'
+  'max_allowed_packet': '64MB'
+
+  # application related stuff
+  'secure_file_priv': "''"
+mysql_users:
+  - name: admin
+    password: "changeme"
+    privileges: "*.*:ALL"

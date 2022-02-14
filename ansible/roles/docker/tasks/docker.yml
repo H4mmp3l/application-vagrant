@@ -1,0 +1,41 @@
+##################################################
+### Setup Docker
+- name: Add Docker apt key.
+  apt_key:
+    url: "{{ docker_apt_gpg_key }}"
+    state: present
+  register: add_repository_key
+  ignore_errors: "{{ docker_apt_ignore_key_error }}"
+
+- name: Ensure curl is present
+  apt:
+    name: curl
+    state: present
+  when: add_repository_key is failed
+
+- name: Add Docker apt key.
+  shell: >
+    curl -sSL {{ docker_apt_gpg_key }} | sudo apt-key add -
+  args:
+    warn: false
+  when: add_repository_key is failed
+
+- name: Add Docker repository.
+  apt_repository:
+    repo: "{{ docker_apt_repository }}"
+    state: present
+    update_cache: true
+
+- name: Install Docker
+  apt:
+    name: "{{ docker_package }}"
+    state: latest
+    update_cache: yes
+  notify:
+    - restart docker
+
+- name: Start Docker and enable the service in autostart
+  service:
+    name: docker
+    state: started
+    enabled: yes

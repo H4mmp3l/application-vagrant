@@ -1,0 +1,10 @@
+---
+
+- name: Fix ONLY_FULL_GROUP_BY
+  command: "mysql -NBe \"SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))\""
+
+- name: Fix NO_ZERO_IN_DATE
+  command: "mysql -NBe \"SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'NO_ZERO_IN_DATE',''))\""
+
+- name: Fix NO_ZERO_DATE
+  command: "mysql -NBe \"SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'NO_ZERO_DATE',''))\""

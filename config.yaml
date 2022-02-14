@@ -1,0 +1,9 @@
+configs:
+    distribution: "ubuntu"                    # box distribution: bento, debian, ubuntu, etc.
+    version: "focal64"                        # Choose between distribution version (change requires: vagrant destroy & vagrant up)
+    private_ip: "10.1.10.20"                  # VM IP in your host-only-network
+    vmname: "devVm"                     # VM name for Virtualbox
+    servername: "devVm.local" # Servername and domain for your projects
+    cpus: 2
+    memory: 4096
+    forward_ports: false
